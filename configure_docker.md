@@ -6,4 +6,4 @@ docker run --name cass2 -d --network my_network_name -e CASSANDRA_SEEDS=cass1 ca
 
 docker run --name cass3 -d --network my_network_name -e CASSANDRA_SEEDS=cass1 cassandra
 
-docker run -it --network mynet --rm cassandra cqlsh cass1
+docker run -it --network my_network_name --rm cassandra cqlsh cass1
