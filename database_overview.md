@@ -17,7 +17,7 @@
 
 
 - user:
-    - id: integer
+    - id: uuid
     - first_name: string
     - last_name: string
 
@@ -26,39 +26,36 @@ Primary key: id
 ---
 
 - plane:
-    - id: integer
+    - id: uuid
     - name: string
-    - seat_id: foreign key to "seat" **(only id)**
+    - seat_id: foreign key to "seat"
 
 Primary key: id
 
 ---
 
 - seat:
-    - id: integer
-    - plane_id: foreign key to "plane" (needed ???)
+    - id: uuid
     - row: integer
     - column: integer
-    - vacant: boolean
+    - is_vacant: boolean
 
 Primary key: ((id), row, column)
 
 ---
 
 - flight:
-    - id: integer
+    - id: uuid
     - plane_id: foreign key to "plane"
     - departure_airport_id: foreign key to "airport"
     - arrival_airport_id: foreign key to "airport"
-    - departure_time: datetime
-    - arrival_time: datetime
 
 Primary key: id
 
 ---
 
 - airport:
-    - id: integer
+    - id: uuid
     - name: string
     - city: string
     - country: string
@@ -68,10 +65,12 @@ Primary key: id
 ---
 
 - reservation:
-    - id: integer
+    - id: uuid
     - user_id: foreign key to "user"
     - flight_id: foreign key to "flight"
-    - seat_id: foreign key to "seat" **(id, row, column)**
+    - seat_id: foreign key to "seat:id"
+    - seat_row: foreign key to "seat:row"
+    - seat_column: foreign key to "seat:column"
     - created_at: datetime
 
 Primary key: id
