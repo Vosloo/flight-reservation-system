@@ -1,6 +1,5 @@
-<center> <h1> Flight reservation system </h1> </center>
+<h1> Flight reservation system </h1>
 
----
 
 <h2> About </h2>
 
