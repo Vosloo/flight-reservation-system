@@ -25,5 +25,5 @@ docker run --name cas3 -d --network cassandra_network -e CASSANDRA_SEEDS=cas1 <i
 To run the cqlsh run:
 
 ```bash
-docker run -it --network cassandra_network --rm <image_name> cqlsh cas1
+docker run --name cqlsh -it --network cassandra_network --rm <image_name> cqlsh cas1
 ```
