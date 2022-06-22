@@ -1,0 +1,4 @@
+FROM cassandra:latest
+
+ENV HEAP_NEWSIZE="600M"
+ENV MAX_HEAP_SIZE="2G"
