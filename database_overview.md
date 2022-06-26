@@ -28,19 +28,19 @@ Primary key: id
 - plane:
     - id: uuid
     - name: string
-    - seat_id: foreign key to "seat"
 
 Primary key: id
 
 ---
 
 - seat:
-    - id: uuid
+    - plane_id: uuid
+    - flight_id: uuid
     - row: integer
     - column: integer
     - is_vacant: boolean
 
-Primary key: ((id), row, column)
+Primary key: ((plane_id, flight_id), row, column)
 
 ---
 
