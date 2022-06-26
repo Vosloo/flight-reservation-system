@@ -17,10 +17,14 @@ To set up nodes (please wait for a few seconds between creating nodes):
 
 ```bash
 docker network create cassandra_network
-docker run --name cas1 --network cassandra_network -d <image_name>
+docker run --name cas1 --network cassandra_network -d -p 127.0.0.1:9042:9042 <image_name>
 docker run --name cas2 -d --network cassandra_network -e CASSANDRA_SEEDS=cas1 <image_name>
 docker run --name cas3 -d --network cassandra_network -e CASSANDRA_SEEDS=cas1 <image_name>
 ```
+
+You can then connect to the node cas1 throgh localhost:9042 (127.0.0.1:9042).
+
+---
 
 To run the cqlsh run:
 
