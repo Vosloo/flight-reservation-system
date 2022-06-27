@@ -34,13 +34,12 @@ Primary key: id
 ---
 
 - seat:
-    - plane_id: uuid
     - flight_id: uuid
     - row: integer
     - column: integer
     - is_vacant: boolean
 
-Primary key: ((plane_id, flight_id), row, column)
+Primary key: ((flight_id), row, column)
 
 ---
 
@@ -50,7 +49,7 @@ Primary key: ((plane_id, flight_id), row, column)
     - departure_airport_id: foreign key to "airport"
     - arrival_airport_id: foreign key to "airport"
 
-Primary key: id
+Primary key: ((id), plane_id)
 
 ---
 
@@ -68,9 +67,8 @@ Primary key: id
     - id: uuid
     - user_id: foreign key to "user"
     - flight_id: foreign key to "flight"
-    - seat_id: foreign key to "seat:id"
     - seat_row: foreign key to "seat:row"
     - seat_column: foreign key to "seat:column"
     - created_at: datetime
 
-Primary key: id
+Primary key: (id, user_id, flight_id)
