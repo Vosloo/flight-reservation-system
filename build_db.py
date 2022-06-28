@@ -144,8 +144,8 @@ def create_reservation(connector: Connector) -> None:
     connector.execute("DROP TABLE IF EXISTS flight_reservation.reservation")
     connector.execute(
         "CREATE TABLE flight_reservation.reservation "
-        "(id uuid, user_id uuid, flight_id uuid, seat_row int, seat_col int, created_at timestamp, "
-        "PRIMARY KEY(id, user_id, flight_id))"
+        "(user_id uuid, flight_id uuid, id uuid, seat_row int, seat_col int, created_at timestamp, "
+        "PRIMARY KEY(user_id, flight_id, id))"
     )
 
 

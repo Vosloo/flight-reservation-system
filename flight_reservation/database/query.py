@@ -22,12 +22,14 @@ class Query:
 
         # TODO: Prepare all queries and add them here
 
-        # prepared_queries[QueryType.GET_USER.value] = self._prepare_get_user()
-        # prepared_queries[QueryType.GET_USER_RESERVATIONS.value] = self._prepare_get_user_reservations()
-        # prepared_queries[
-        #     QueryType.GET_USER_RESERVATION_FOR_FLIGHT.value
-        # ] = self._prepare_get_user_reservation_for_flight()
+        prepared_queries[QueryType.GET_USER.value] = self._prepare_get_user()
+        prepared_queries[QueryType.GET_USER_RESERVATIONS.value] = self._prepare_get_user_reservations()
+        prepared_queries[
+            QueryType.GET_USER_RESERVATION_FOR_FLIGHT.value
+        ] = self._prepare_get_user_reservation_for_flight()
         prepared_queries[QueryType.GET_FREE_SEATS.value] = self._prepare_get_free_seats()
+        prepared_queries[QueryType.GET_ALL_USERS.value] = self._prepare_get_all_users()
+        prepared_queries[QueryType.GET_ALL_FLIGHT_RESERVATIONS.value] = self._prepare_get_all_flight_reservations()
 
         return prepared_queries
 
