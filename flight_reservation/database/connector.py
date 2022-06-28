@@ -8,8 +8,6 @@ from cassandra.cluster import (
     ConsistencyLevel,
 )
 
-KEYSPACE = "flight_reservation"
-
 
 class Connector:
     def __init__(self) -> None:
@@ -21,7 +19,6 @@ class Connector:
             ["127.0.0.1"], port=9042, execution_profiles={EXEC_PROFILE_DEFAULT: profile}
         )
         self._session: Session = self._cluster.connect()
-        self._session.row_factory
 
     def prepare(self, query: str) -> PreparedStatement:
         return self._session.prepare(query)

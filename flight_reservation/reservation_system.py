@@ -1,42 +1,52 @@
+import random
 import uuid
 
-from .database import Connector, Repository, QueryType
+from .database import Connector, Repository
 
 
 class ReservationSystem:
     def __init__(self, connector: Connector) -> None:
-        self.query = Repository(connector)
+        self.repository = Repository(connector)
 
         self._free_seats = {}
 
-    def cancel_reservation(self, user_id: str, flight_id: str) -> bool:
-        # TODO: Implement
-        pass
+    def cancel_reservation(self, user_id: str, flight_id: str, reservation_id: str) -> bool:
+        self.repository.delete_reservation(user_id, flight_id, reservation_id)
+        reservation = self.repository.get_reservation(user_id, flight_id, reservation_id)
+        row, column = reservation["row"], reservation["column"]
+        self.repository.update_seat(flight_id, row, column, True)
+        # usuń z tabeli reservation
+        # zmień na wolne w tabeli siedzeń
+        print("Reservation was canceled.")
+        return True
 
     def reserve_flight_with_random_seat(self, user_id: str, flight_id: str) -> bool:
-        # TODO: Implement
-        pass
+        free_seats_in_flight = self.repository.get_free_seats(flight_id)
+        seat = random.choice(free_seats_in_flight)
+        row, column = seat["row"], seat["column"]
+        self.repository.add_reservation(user_id, flight_id, row, column)
+        self.repository.update_seat(flight_id, row, column, True)
+
+        return True
 
     def reserve_flight_with_specific_seat(
         self, user_id: str, flight_id: str, row: int, column: int
     ) -> bool:
-        # TODO: Implement
-        pass
+        self.repository.add_reservation(user_id, flight_id, row, column)
+        self.repository.update_seat(flight_id, row, column, True)
+
+        return True
 
     def _seat_is_free(self, flight_id: str, row: int, column: int) -> bool:
         flight_id = uuid.UUID(flight_id)
 
-        if seats := self._free_seats.get(flight_id) is None:
-            # Seats are not yet loaded for this flight
-            res = self.query.query(QueryType.GET_FREE_SEATS, {"flight_id": flight_id})
-            # TODO: Create _free_seats[flight_id] = res; res needs to have matrix structure (np.array?)
-            seats = ... # seats = self._free_seats[flight_id]
+        free_seats = self.repository.get_free_seats(flight_id)
+        for seat in free_seats:
+            seat_row, seat_column = seat["row"], seat["column"]
+            if row == seat_row and column == seat_column:
+                return seat["is_vacant"]
 
-        # seats[row][column] = (is_vacant) True/False
-
-        # TODO:
-        # return seats[row][column]
-        return ...
+        return False
 
     def _user_has_reservation_for_flight(self, user_id: str, flight_id: str) -> bool:
         # TODO: Implement
