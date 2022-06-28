@@ -1,5 +1,5 @@
-__all__ = ["Connector", "Query", "QueryType"]
+__all__ = ["Connector", "Repository", "QueryType"]
 
 from .connector import Connector
-from .query import Query
+from .repository import Repository
 from .query_type import QueryType

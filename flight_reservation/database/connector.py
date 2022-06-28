@@ -1,12 +1,27 @@
-from cassandra.cluster import Cluster, PreparedStatement, ResultSet, Session
+from cassandra.cluster import (
+    EXEC_PROFILE_DEFAULT,
+    Cluster,
+    ExecutionProfile,
+    PreparedStatement,
+    ResultSet,
+    Session,
+    ConsistencyLevel,
+)
 
 KEYSPACE = "flight_reservation"
 
 
 class Connector:
     def __init__(self) -> None:
-        self._cluster = Cluster(["127.0.0.1"], port=9042)
+        profile = ExecutionProfile(
+            consistency_level=ConsistencyLevel.ALL,
+        )
+
+        self._cluster = Cluster(
+            ["127.0.0.1"], port=9042, execution_profiles={EXEC_PROFILE_DEFAULT: profile}
+        )
         self._session: Session = self._cluster.connect()
+        self._session.row_factory
 
     def prepare(self, query: str) -> PreparedStatement:
         return self._session.prepare(query)

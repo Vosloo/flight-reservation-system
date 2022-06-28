@@ -1,11 +1,11 @@
 import uuid
 
-from .database import Connector, Query, QueryType
+from .database import Connector, Repository, QueryType
 
 
 class ReservationSystem:
     def __init__(self, connector: Connector) -> None:
-        self.query = Query(connector)
+        self.query = Repository(connector)
 
         self._free_seats = {}
 

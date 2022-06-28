@@ -64,11 +64,11 @@ Primary key: id
 ---
 
 - reservation:
-    - id: uuid
     - user_id: foreign key to "user"
     - flight_id: foreign key to "flight"
+    - id: uuid
     - seat_row: foreign key to "seat:row"
     - seat_column: foreign key to "seat:column"
     - created_at: datetime
 
-Primary key: (id, user_id, flight_id)
+Primary key: (user_id, flight_id, id)
