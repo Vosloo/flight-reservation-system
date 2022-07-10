@@ -26,11 +26,15 @@ PLANE_NAMES = ["Galczynski", "Syrenka", "Balczewski", "Sokol", "Kalista", "Stoch
 
 RETRY_TIME = 10  # seconds
 SLEEP_BEFORE_INSERT = 5  # seconds
+SLEEP_KEYSPACE = 10  # seconds
 
 
 def create_keyspace(connector: Connector) -> None:
     print("Creating keyspace...")
     connector.execute("DROP KEYSPACE IF EXISTS flight_reservation")
+
+    sleep_before_insert(SLEEP_KEYSPACE)
+
     connector.execute(
         "CREATE KEYSPACE IF NOT EXISTS flight_reservation "
         "WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }"
@@ -119,7 +123,7 @@ def create_flight(connector: Connector, airport_ids: list, plane_ids: list) -> l
         departure_airport_id, arrival_airport_id = dep_arr
         plane_id = plane_ids[ind % len(plane_ids)]
 
-        vals = [flight_id, departure_airport_id, arrival_airport_id, plane_id]
+        vals = [flight_id, plane_id, departure_airport_id, arrival_airport_id]
         connector.execute(cql, vals)
 
     return flight_ids
@@ -161,10 +165,10 @@ def create_reservation(connector: Connector) -> None:
     )
 
 
-def sleep_before_insert() -> None:
-    print(f"Sleeping for {SLEEP_BEFORE_INSERT}s...", end="")
-    sleep(SLEEP_BEFORE_INSERT)
-    print(f"\rSleeping for {SLEEP_BEFORE_INSERT}s...done")
+def sleep_before_insert(sleep_time=SLEEP_BEFORE_INSERT) -> None:
+    print(f"Sleeping for {sleep_time}s...", end="")
+    sleep(sleep_time)
+    print(f"\rSleeping for {sleep_time}s...done")
 
 
 def create_db(connector: Connector) -> None:
