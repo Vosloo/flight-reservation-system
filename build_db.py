@@ -6,6 +6,7 @@ from time import sleep
 
 from cassandra import OperationTimedOut
 
+from definitions import NO_COLS, NO_ROWS
 from flight_reservation.database import Connector
 
 CITIES = ["Lublin", "Warszawa", "Poznan", "Krakow", "Gdansk", "Radom", "Wroclaw", "Lodz", "Katowice"]
@@ -145,7 +146,7 @@ def create_seat(connector: Connector, flight_ids: list) -> None:
         "(%(flight_id)s, %(row)s, %(column)s, %(is_vacant)s)"
     )
     for flight_id in flight_ids:
-        for row, column in product(range(1, 11), range(1, 7)):
+        for row, column in product(range(1, NO_ROWS), range(1, NO_COLS)):
             vals = {
                 "flight_id": flight_id,
                 "row": row,
@@ -194,8 +195,6 @@ if __name__ == "__main__":
         print("Database created")
     except Exception as e:
         print("Error while setting up the database:")
-        print(type(e))
-        print(e)
         raise e
     finally:
         print("Closing connection...")
