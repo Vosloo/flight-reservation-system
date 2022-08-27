@@ -1,11 +1,8 @@
-from uuid import uuid4
-from cassandra.cqlengine import columns
-from cassandra.cqlengine.models import Model
+from dataclasses import dataclass
 
 
-class User(Model):
-    __table_name__ = 'user'
-
-    id = columns.UUID(primary_key=True, default=lambda: uuid4())
-    first_name = columns.Text(required=True)
-    last_name = columns.Text(required=True)
+@dataclass
+class User:
+    id: str
+    first_name: str
+    last_name: str

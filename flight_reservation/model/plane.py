@@ -1,12 +1,13 @@
-from uuid import uuid4
-
-from cassandra.cqlengine import columns
-from cassandra.cqlengine.models import Model
+from dataclasses import dataclass
 
 
-class Plane(Model):
-    __table_name__ = "plane"
+@dataclass
+class Plane:
+    id: str
+    name: str
 
-    id = columns.UUID(primary_key=True, default=lambda: uuid4())
-    name = columns.Text(required=True)
-    seat_id = columns.UUID(required=True)
+    def __str__(self):
+        return f"{self.name}"
+
+    def __repr__(self):
+        return str(self)

@@ -1,13 +1,20 @@
-from uuid import uuid4
+from dataclasses import dataclass
 
-from cassandra.cqlengine import columns
-from cassandra.cqlengine.models import Model
+from .airport import Airport
+from .plane import Plane
 
 
-class Flight(Model):
-    __table_name__ = "flight"
+@dataclass
+class Flight:
+    id: str
+    plane: Plane
+    departure_airport: Airport
+    arrival_airport: Airport
 
-    id = columns.UUID(primary_key=True, default=lambda: uuid4())
-    plane_id = columns.UUID(required=True)
-    departure_airport_id = columns.UUID(required=True)
-    arrival_airport_id = columns.UUID(required=True)
+    def __str__(self):
+        return (
+            f"Flight: {self.departure_airport.name} to {self.arrival_airport.name} ({self.plane.name})"
+        )
+
+    def __repr__(self):
+        return str(self)

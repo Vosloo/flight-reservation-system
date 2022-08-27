@@ -1,16 +1,6 @@
-__all__ = [
-    "Airport",
-    "Flight",
-    "Plane",
-    "User",
-    "Reservation",
-    "Seat",
-]
-
+__all__ = ["Flight", "Plane", "Airport", "User"]
 
 from .airport import Airport
 from .flight import Flight
 from .plane import Plane
-from .reservation import Reservation
-from .seat import Seat
 from .user import User

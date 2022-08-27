@@ -2,7 +2,11 @@
 
 import uuid
 from itertools import combinations, product
+from time import sleep
 
+from cassandra import OperationTimedOut
+
+from definitions import NO_COLS, NO_ROWS
 from flight_reservation.database import Connector
 
 CITIES = ["Lublin", "Warszawa", "Poznan", "Krakow", "Gdansk", "Radom", "Wroclaw", "Lodz", "Katowice"]
@@ -21,41 +25,50 @@ SECOND_NAMES = [
 ]
 PLANE_NAMES = ["Galczynski", "Syrenka", "Balczewski", "Sokol", "Kalista", "Stoch"]
 
+RETRY_TIME = 10  # seconds
+SLEEP_BEFORE_INSERT = 5  # seconds
+SLEEP_KEYSPACE = 10  # seconds
+
 
 def create_keyspace(connector: Connector) -> None:
     print("Creating keyspace...")
     connector.execute("DROP KEYSPACE IF EXISTS flight_reservation")
+
+    sleep_before_insert(SLEEP_KEYSPACE)
+
     connector.execute(
         "CREATE KEYSPACE IF NOT EXISTS flight_reservation "
         "WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }"
     )
-    connector.execute("USE flight_reservation")
 
 
-def create_user(connector: Connector) -> list:
+def create_user(connector: Connector) -> None:
     print("Creating user table...")
-    user_ids = []
-    connector.execute("DROP TABLE IF EXISTS user")
-    connector.execute("CREATE TABLE user (id uuid, first_name text, last_name text, PRIMARY KEY(id))")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.user")
+    connector.execute(
+        "CREATE TABLE flight_reservation.user "
+        "(id uuid, first_name text, last_name text, PRIMARY KEY(id))"
+    )
 
+    sleep_before_insert()
+
+    cql = "INSERT INTO flight_reservation.user (id, first_name, last_name) VALUES (%s, %s, %s)"
     for person in product(FIRST_NAMES, SECOND_NAMES):
         first_name, last_name = person
         user_id = uuid.uuid1()
-        user_ids.append(user_id)
-        cql = "INSERT INTO user (id, first_name, last_name) VALUES (%s, %s, %s)"
         vals = [user_id, first_name, last_name]
         connector.execute(cql, vals)
-
-    return user_ids
 
 
 def create_plane(connector: Connector) -> list:
     print("Creating plane table...")
     plane_ids = []
-    connector.execute("DROP TABLE IF EXISTS plane")
-    connector.execute("CREATE TABLE plane (id uuid, name text, PRIMARY KEY(id))")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.plane")
+    connector.execute("CREATE TABLE flight_reservation.plane (id uuid, name text, PRIMARY KEY(id))")
 
-    cql = "INSERT INTO plane (id, name) VALUES (%s, %s)"
+    sleep_before_insert()
+
+    cql = "INSERT INTO flight_reservation.plane (id, name) VALUES (%s, %s)"
     for plane in range(6):
         plane_id = uuid.uuid1()
         plane_ids.append(plane_id)
@@ -69,12 +82,15 @@ def create_plane(connector: Connector) -> list:
 def create_airport(connector: Connector) -> list:
     print("Creating airport table...")
     airport_ids = []
-    connector.execute("DROP TABLE IF EXISTS airport")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.airport")
     connector.execute(
-        "CREATE TABLE airport (id uuid, name text, city text, country text, PRIMARY KEY(id))"
+        "CREATE TABLE flight_reservation.airport "
+        "(id uuid, name text, city text, country text, PRIMARY KEY(id))"
     )
 
-    cql = "INSERT INTO airport (id, name, city, country) VALUES (%s, %s, %s, %s)"
+    sleep_before_insert()
+
+    cql = "INSERT INTO flight_reservation.airport (id, name, city, country) VALUES (%s, %s, %s, %s)"
     for airport in CITIES:
         airport_id = uuid.uuid1()
         airport_ids.append(airport_id)
@@ -89,15 +105,18 @@ def create_airport(connector: Connector) -> list:
 def create_flight(connector: Connector, airport_ids: list, plane_ids: list) -> list:
     print("Creating flight table...")
     flight_ids = []
-    connector.execute("DROP TABLE IF EXISTS flight")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.flight")
     connector.execute(
-        "CREATE TABLE flight "
-        "(id uuid, plane_id uuid, departure_airport_id uuid, arrival_airport_id uuid, PRIMARY KEY(id))"
+        "CREATE TABLE flight_reservation.flight "
+        "(id uuid, plane_id uuid, departure_airport_id uuid, arrival_airport_id uuid, "
+        "PRIMARY KEY((id), plane_id))"
     )
 
+    sleep_before_insert()
+
     cql = (
-        "INSERT INTO flight (id, plane_id, departure_airport_id, arrival_airport_id) "
-        "VALUES (%s, %s, %s, %s)"
+        "INSERT INTO flight_reservation.flight "
+        "(id, plane_id, departure_airport_id, arrival_airport_id) VALUES (%s, %s, %s, %s)"
     )
     for ind, dep_arr in enumerate(combinations(airport_ids, 2)):
         flight_id = uuid.uuid1()
@@ -105,57 +124,78 @@ def create_flight(connector: Connector, airport_ids: list, plane_ids: list) -> l
         departure_airport_id, arrival_airport_id = dep_arr
         plane_id = plane_ids[ind % len(plane_ids)]
 
-        vals = [flight_id, departure_airport_id, arrival_airport_id, plane_id]
+        vals = [flight_id, plane_id, departure_airport_id, arrival_airport_id]
         connector.execute(cql, vals)
 
     return flight_ids
 
 
-def create_seat(connector: Connector, plane_ids: list) -> None:
+def create_seat(connector: Connector, flight_ids: list) -> None:
     print("Creating seat table...")
-    connector.execute("DROP TABLE IF EXISTS seat")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.seat")
     connector.execute(
-        "CREATE TABLE seat "
-        "(plane_id uuid, row int, column int, is_vacant boolean, PRIMARY KEY((plane_id), row, column))"
+        "CREATE TABLE flight_reservation.seat "
+        "(flight_id uuid, row int, column int, is_vacant boolean, "
+        "PRIMARY KEY((flight_id), row, column))"
     )
 
+    sleep_before_insert()
+
     cql = (
-        "INSERT INTO seat (plane_id, row, column, is_vacant) VALUES "
-        "(%(plane_id)s, %(row)s, %(column)s, %(is_vacant)s)"
+        "INSERT INTO flight_reservation.seat (flight_id, row, column, is_vacant) VALUES "
+        "(%(flight_id)s, %(row)s, %(column)s, %(is_vacant)s)"
     )
-    for plane_id in plane_ids:
-        for row in range(10):
-            for col in range(6):
-                vals = {"plane_id": plane_id, "row": row, "column": col, "is_vacant": True}
-                connector.execute(cql, vals)
+    for flight_id in flight_ids:
+        for row, column in product(range(1, NO_ROWS), range(1, NO_COLS)):
+            vals = {
+                "flight_id": flight_id,
+                "row": row,
+                "column": column,
+                "is_vacant": True,
+            }
+            connector.execute(cql, vals)
 
 
 def create_reservation(connector: Connector) -> None:
     print("Creating reservation table...")
-    connector.execute("DROP TABLE IF EXISTS reservation")
+    connector.execute("DROP TABLE IF EXISTS flight_reservation.reservation")
     connector.execute(
-        "CREATE TABLE reservation "
-        "(id uuid, user_id uuid, flight_id uuid, seat_id uuid, "
-        "seat_row int, seat_col int, created_at timestamp, PRIMARY KEY(id))"
+        "CREATE TABLE flight_reservation.reservation "
+        "(user_id uuid, flight_id uuid, id uuid, seat_row int, seat_column int, created_at timestamp, "
+        "PRIMARY KEY(user_id, flight_id, id))"
     )
+
+
+def sleep_before_insert(sleep_time=SLEEP_BEFORE_INSERT) -> None:
+    print(f"Sleeping for {sleep_time}s...", end="")
+    sleep(sleep_time)
+    print(f"\rSleeping for {sleep_time}s...done")
+
+
+def create_db(connector: Connector) -> None:
+    create_keyspace(connector)
+    create_user(connector)
+    plane_ids = create_plane(connector)
+    airport_ids = create_airport(connector)
+    flight_ids = create_flight(connector, airport_ids, plane_ids)
+    create_seat(connector, flight_ids)
+    create_reservation(connector)
 
 
 if __name__ == "__main__":
     connector = Connector()
 
     try:
-        create_keyspace(connector)
-        user_ids = create_user(connector)
-        plane_ids = create_plane(connector)
-        airport_ids = create_airport(connector)
-        flight_ids = create_flight(connector, airport_ids, plane_ids)
-        create_seat(connector, plane_ids)
-        create_reservation(connector)
+        create_db(connector)
+        print("Database created")
+    except OperationTimedOut:
+        print(f"Connection error, retrying in {RETRY_TIME}s...")
+        sleep(RETRY_TIME)
+        create_db(connector)
+        print("Database created")
     except Exception as e:
         print("Error while setting up the database:")
-        print(e)
         raise e
     finally:
+        print("Closing connection...")
         connector.close()
-
-    print("Database created")
