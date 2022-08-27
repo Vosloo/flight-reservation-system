@@ -4,6 +4,10 @@ from enum import Enum, unique
 @unique
 class QueryType(Enum):
     ADD_RESERVATION = "add_reservation"
+    ADD_USER = "add_user"
+    CLEAN_SEATS = "clean_seats"
+    CLEAN_RESERVATIONS = "clean_reservations"
+    DELETE_USER = "delete_user"
     DELETE_RESERVATION = "delete_reservation"
     GET_AIRPORT = "get_airport"
     GET_ALL_FLIGHT_RESERVATIONS = "get_all_flight_reservations"

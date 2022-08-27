@@ -4,6 +4,8 @@ from uuid import UUID, uuid1
 
 from cassandra.cluster import PreparedStatement, ResultSet
 
+from definitions import NO_ROWS, NO_COLS
+
 from .connector import Connector
 from .query_type import QueryType
 
@@ -17,6 +19,10 @@ class Repository:
         prepared_queries = {}
 
         prepared_queries[QueryType.ADD_RESERVATION.value] = self._prepare_add_reservation()
+        prepared_queries[QueryType.ADD_USER.value] = self._prepare_add_user()
+        prepared_queries[QueryType.CLEAN_SEATS.value] = self._prepare_clean_seats()
+        prepared_queries[QueryType.CLEAN_RESERVATIONS.value] = self._prepare_clean_reservations()
+        prepared_queries[QueryType.DELETE_USER.value] = self._prepare_delete_user()
         prepared_queries[QueryType.DELETE_RESERVATION.value] = self._prepare_delete_reservation()
         prepared_queries[QueryType.GET_AIRPORT.value] = self._prepare_get_airport()
         prepared_queries[
@@ -56,6 +62,45 @@ class Repository:
             "INSERT INTO flight_reservation.reservation "
             "(user_id, flight_id, id, seat_row, seat_column, created_at) VALUES (?, ?, ?, ?, ?, ?)"
         )
+
+    def add_user(self, user_id: Union[str, UUID], first_name: str, last_name: str):
+        user_id = self._format_as_uuid(user_id)
+
+        query = self._prepared_queries[QueryType.ADD_USER.value]
+        self._connector.execute(query, [user_id, first_name, last_name])
+
+    def _prepare_add_user(self) -> PreparedStatement:
+        return self._connector.prepare(
+            "INSERT INTO flight_reservation.user (id, first_name, last_name) VALUES (?, ?, ?)"
+        )
+
+    def clean_seats(self, flight_id):
+        query = self._prepared_queries[QueryType.CLEAN_SEATS.value]
+        for row in range(1, NO_ROWS):
+            for column in range(1, NO_COLS):
+                self._connector.execute(query, [flight_id, row, column])
+
+    def _prepare_clean_seats(self) -> PreparedStatement:
+        return self._connector.prepare(
+            "UPDATE flight_reservation.seat SET is_vacant = true WHERE "
+            "flight_id = ? AND row = ? AND column = ?"
+        )
+
+    def clean_reservations(self):
+        query = self._prepared_queries[QueryType.CLEAN_RESERVATIONS.value]
+        self._connector.execute(query)
+
+    def _prepare_clean_reservations(self) -> PreparedStatement:
+        return self._connector.prepare("TRUNCATE flight_reservation.reservation")
+
+    def delete_user(self, user_id: Union[str, UUID]) -> None:
+        user_id = self._format_as_uuid(user_id)
+
+        query = self._prepared_queries[QueryType.DELETE_USER.value]
+        self._connector.execute(query, [user_id])
+
+    def _prepare_delete_user(self) -> PreparedStatement:
+        return self._connector.prepare("DELETE FROM flight_reservation.user WHERE id = ?")
 
     def delete_reservation(
         self, user_id: Union[str, UUID], flight_id: Union[str, UUID], _id: Union[str, UUID]
