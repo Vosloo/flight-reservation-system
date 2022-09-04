@@ -30,7 +30,7 @@ class Repository:
         ] = self._prepare_get_all_flight_reservations()
         prepared_queries[QueryType.GET_ALL_FLIGHTS.value] = self._prepare_get_all_flights()
         prepared_queries[QueryType.GET_ALL_USERS.value] = self._prepare_get_all_users()
-        prepared_queries[QueryType.GET_FREE_SEATS.value] = self._prepare_get_free_seats()
+        prepared_queries[QueryType.GET_ALL_SEATS.value] = self._prepare_get_all_seats()
         prepared_queries[QueryType.GET_PLANE.value] = self._prepare_get_plane()
         prepared_queries[QueryType.GET_RESERVATION.value] = self._prepare_get_reservation()
         prepared_queries[
@@ -147,13 +147,13 @@ class Repository:
     def _prepare_get_all_users(self) -> PreparedStatement:
         return self._connector.prepare("SELECT * FROM flight_reservation.user")
 
-    def get_free_seats(self, flight_id: Union[str, UUID]) -> ResultSet:
+    def get_all_seats(self, flight_id: Union[str, UUID]) -> ResultSet:
         flight_id = self._format_as_uuid(flight_id)
 
-        query = self._prepared_queries[QueryType.GET_FREE_SEATS.value]
+        query = self._prepared_queries[QueryType.GET_ALL_SEATS.value]
         return self._connector.execute(query, [flight_id])
 
-    def _prepare_get_free_seats(self) -> PreparedStatement:
+    def _prepare_get_all_seats(self) -> PreparedStatement:
         return self._connector.prepare("SELECT * FROM flight_reservation.seat WHERE flight_id = ?")
 
     def get_plane(self, plane_id: Union[str, UUID]) -> ResultSet:
