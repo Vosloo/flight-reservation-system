@@ -1,13 +1,15 @@
-from uuid import uuid4
-
-from cassandra.cqlengine import columns
-from cassandra.cqlengine.models import Model
+from dataclasses import dataclass
 
 
-class Airport(Model):
-    __table_name__ = "airport"
+@dataclass
+class Airport:
+    id: str
+    name: str
+    city: str
+    country: str
 
-    id = columns.UUID(primary_key=True, default=lambda: uuid4())
-    name = columns.Text(required=True)
-    city = columns.Text(required=True)
-    country = columns.Text(required=True)
+    def __str__(self):
+        return f"{self.name} ({self.city}, {self.country})"
+
+    def __repr__(self):
+        return str(self)

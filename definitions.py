@@ -1,0 +1,2 @@
+NO_ROWS = 11
+NO_COLS = 7
